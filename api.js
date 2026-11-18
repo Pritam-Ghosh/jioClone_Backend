@@ -1,14 +1,7 @@
 const express = require("express");
-
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken")
-const util = require("util")
-const promisify = util.promisify
-const promisedJWTsign = promisify(jwt.sign);
-const promisedJWTverify = promisify(jwt.verify);
 const cors = require("cors");
-
 const dotenv = require("dotenv");
 
 dotenv.config()
@@ -16,7 +9,7 @@ dotenv.config()
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
-app.use(express.json())
+
 const corsConfig = {
   origin: true,
   credentials: true
