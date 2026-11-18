@@ -26,6 +26,7 @@ const handleSignUp = async (req, resp) => {
 }
 
 const handleLogin = async (req, resp) => {
+
   try {
     const { email, password } = req.body
     const user = await UserModel.findOne({ email: email })
@@ -67,7 +68,7 @@ const handleProfile = async (req, resp) => {
 
     if (!user) {
       return resp.status(404).json({
-             status: "failure",
+        status: "failure",
         message: "user not found",
       })
     }
@@ -90,7 +91,7 @@ const handleProfile = async (req, resp) => {
 const handleProtectRoute = async (req, resp, next) => {
   try {
     if (!req.cookies || !req.cookies.userInfo) {
-      
+
       return resp.status(401).json({
         message: "Please login first"
       })
@@ -110,4 +111,23 @@ const handleProtectRoute = async (req, resp, next) => {
   }
 }
 
-module.exports = { handleSignUp, handleLogin, handleProfile, handleProtectRoute }
+const handleLogout = async (req, resp) => {
+  try {
+    resp.cookies("userInfo")
+    resp.status(200).json({
+      status: "success",
+      message: "Logout Successfull"
+    })
+  } catch (err) {
+    console.log(err.message);
+    resp.status(400).json({
+      status: "failed",
+      err: err.message
+    });
+
+  }
+}
+
+
+
+module.exports = { handleSignUp, handleLogin, handleProfile, handleProtectRoute,handleLogout }
