@@ -21,6 +21,15 @@ const url = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@clu
 mongoose.connect(url)
   .then(() => console.log('----connected!----'));
 
+
+  app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "JioClone Backend is running!"
+  });
+});
+
+
 const {AuthRouter} = require("./router/AuthRouter")
 
 app.use("/api/auth",AuthRouter)
