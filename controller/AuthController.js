@@ -1,10 +1,13 @@
 const { UserModel } = require("../model/UserModel");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken")
-const util = require("util")
+const util = require("util");
+const { sendEmail } = require("../utils/DynamicEmailSender");
 const promisify = util.promisify
 const promisedJWTsign = promisify(jwt.sign);
 const promisedJWTverify = promisify(jwt.verify);
+const fs = require("fs");
+const path = require("path");
 
 const handleSignUp = async (req, resp) => {
   try {
@@ -129,5 +132,163 @@ const handleLogout = async (req, resp) => {
 }
 
 
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000);
+}
 
-module.exports = { handleSignUp, handleLogin, handleProfile, handleProtectRoute,handleLogout }
+
+
+const handleForgetPassword = async (req, resp) => {
+  try {
+    if (req.body.email == undefined) {
+      return resp.status(400).json({
+        status: "failure",
+        message: "Please enter the correct email!"
+      });
+    }
+
+    const user = await UserModel.findOne({
+      email: req.body.email
+    });
+
+    if (user == null) {
+      return resp.status(404).json({
+        status: "failure",
+        message: "Email not found"
+      });
+    }
+
+    const otp = generateOTP();
+
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 1000 * 60 * 10;
+
+    await user.save({ validateBeforeSave: false });
+
+
+    resp.status(200).json({
+      message: "otp is send successfully",
+      status: "success",
+      otp: otp,
+      resetURL: `http://localhost:3200/api/auth/resetPassword/${user["_id"]}`
+    });
+
+
+    const templateData = {
+      user: user.name,
+      otp: user.otp
+    };
+
+
+    await sendEmail(
+      "../templates/otp.html",
+      user.email,
+      templateData
+    );
+
+  } catch (err) {
+    console.log("Forgot password error:", err);
+
+    if (!resp.headersSent) {
+      return resp.status(500).json({
+        status: "failure",
+        message: "Unable to send OTP email",
+        error: err.message
+      });
+    }
+  }
+};
+
+
+const handleResetPassword = async (req, resp) => {
+  try {
+    const { email, otp, password, confirmPassword } = req.body
+
+    if (!email || !otp || !password || !confirmPassword) {
+      return resp.status(400).json({
+        status: "failure",
+        message: "Please fill in all fields"
+      })
+    }
+
+    if (password !== confirmPassword) {
+      return resp.status(400).json({
+        status: "failure",
+        message: "Password confrim password not match"
+      })
+    }
+
+
+    const user = await UserModel.findOne({ email })
+    if (!user) {
+      return resp.status(404).json({
+        status: "failure",
+        message: "user not found!"
+      })
+    }
+
+    if (!user.otp) {
+      return resp.status(404).json({
+        status: "failure",
+        message: "otp not found!"
+      })
+    }
+
+    if (!user.otp) {
+      return resp.status(404).json({
+        status: "failure",
+        message: "otp not found!"
+      })
+    }
+
+    if (Date.now() > new Date(user.otpExpiry).getTime()) {
+      return resp.status(401).json({
+        status: "failure",
+        message: "OTP expired. Please request a new OTP"
+      })
+    }
+
+    if (String(user.otp).trim() !== String(otp).trim()) {
+      return resp.status(400).json({
+        status: "failure",
+        message: "OTP is incorrect"
+      });
+    }
+
+    user.password = password
+    user.confirmPassword = confirmPassword
+
+    user.otp = undefined
+    user.otpExpiry = undefined
+
+    await user.save()
+
+
+
+    return resp.status(200).json({
+      status: "success",
+      message: "Password reset successfully"
+    });
+
+  } catch (err) {
+    console.log("Reset Password Error:", err);
+
+    return resp.status(500).json({
+      status: "failure",
+      message: "Unable to reset password",
+      err: err.message
+    });
+  }
+}
+
+
+module.exports = {
+  handleSignUp,
+  handleLogin,
+  handleProfile,
+  handleProtectRoute,
+  handleLogout,
+  handleForgetPassword,
+  generateOTP,
+  handleResetPassword
+}

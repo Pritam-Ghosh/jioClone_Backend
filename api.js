@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
-
+const path = require("path")
+const fs = require("fs")
 dotenv.config()
 
 const app = express()
@@ -22,7 +23,7 @@ mongoose.connect(url)
   .then(() => console.log('----connected!----'));
 
 
-  app.get("/", (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     message: "JioClone Backend is running!"
@@ -30,9 +31,14 @@ mongoose.connect(url)
 });
 
 
-const {AuthRouter} = require("./router/AuthRouter")
+const { AuthRouter } = require("./router/AuthRouter");
+const { MovieRouter } = require("./router/MovieRouter");
 
-app.use("/api/auth",AuthRouter)
+
+app.use("/api/auth", AuthRouter)
+
+app.use("/api/movie",MovieRouter)
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

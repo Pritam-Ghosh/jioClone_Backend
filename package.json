@@ -6,10 +6,10 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
-"scripts": {
-  "start": "node api.js",
-  "dev": "nodemon api.js"
-},
+  "scripts": {
+    "start": "node api.js",
+    "dev": "nodemon api.js"
+  },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
     "cookie-parser": "^1.4.7",
@@ -19,6 +19,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.9.0",
     "mongoose": "^9.12.2",
+    "nodemailer": "^10.6.0",
     "nodemon": "^3.1.14"
   }
 }

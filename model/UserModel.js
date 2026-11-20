@@ -38,6 +38,9 @@ const schemaRules = {
     otp: {
         type: String
     },
+    otpExpiry: {
+type: Date
+    },
     watchlist: [watchlistItemSchema],
     createAt: {
         type: Date,
