@@ -281,6 +281,83 @@ const handleResetPassword = async (req, resp) => {
   }
 }
 
+const handleGetWatchlist = async (req, resp) => {
+    try {
+
+        const userId = req.userId;
+
+        const user = await UserModel.findById(userId);
+
+        if (!user) {
+            return resp.status(404).json({
+                status: "failure",
+                message: "User not found"
+            });
+        }
+
+        return resp.status(200).json({
+            status: "success",
+            message: user.watchlist
+        });
+
+    } catch (error) {
+        console.log("Get Watchlist Error:", error.message);
+
+        return resp.status(500).json({
+            status: "failure",
+            message: error.message
+        });
+    }
+};
+const handleAddWatchlist = async (req, resp) => {
+    try {
+        const userId = req.userId;
+
+        const { id, name, poster_path } = req.body;
+
+        const user = await UserModel.findById(userId);
+
+        if (!user) {
+            return resp.status(404).json({
+                status: "failure",
+                message: "User not found"
+            });
+        }
+
+        const alreadyAdded = user.watchlist.some(
+            (movie) => movie.id === String(id)
+        );
+
+        if (alreadyAdded) {
+            return resp.status(409).json({
+                status: "failure",
+                message: "Movie already in watchlist"
+            });
+        }
+
+        user.watchlist.push({
+            id: String(id),
+            name,
+            poster_path
+        });
+
+        await user.save();
+
+        return resp.status(200).json({
+            status: "success",
+            message: "Movie added to watchlist",
+            watchlist: user.watchlist
+        });
+
+    } catch (error) {
+        console.log("Add Watchlist Error:", error.message);
+
+        return resp.status(500).json({
+            status: "failure",
+            message: error.message
+        });
+    }
+};
 
 module.exports = {
   handleSignUp,
@@ -290,5 +367,7 @@ module.exports = {
   handleLogout,
   handleForgetPassword,
   generateOTP,
-  handleResetPassword
+  handleResetPassword,
+  handleGetWatchlist,
+  handleAddWatchlist
 }
